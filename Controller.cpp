@@ -1,154 +1,15 @@
-п»ї#include <iostream>
-#include <vector>
-#include <cstdlib>
-#include <ctime>
-#include <string>
-#include <iomanip>
-#include <limits>
+// Controller.cpp
+#include "Controller.h"
+#include "View.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
+#include <limits>
+#include "Utils.h"
+#include <cstdlib>
+#include <iomanip> // Добавляем этот заголовочный файл
 
 namespace MyGame {
-
-    // --- Data structures ---
-
-    class Unit {
-    private:
-        std::string unit_name;
-        int hit_points;
-        int max_hit_points;
-        int min_attack;
-        int max_attack;
-        float defense_percentage;
-        std::string attack_type;
-        std::string defense_type;
-        std::string skill_name;
-        std::string skill_description;
-        int cost;
-        std::string attack_pattern; // Single, Multi, Heal
-        int multi_attack_damage;   // РЈСЂРѕРЅ РґР»СЏ Multi Р°С‚Р°Рє
-
-    public:
-        Unit(std::string name, int hp, int max_hp, int min_atk, int max_atk, float def_perc,
-            std::string atk_type, std::string def_type,
-            std::string skill, std::string skill_desc, int unit_cost,
-            std::string atk_pattern, int multi_atk_dmg)
-            : unit_name(name), hit_points(hp), max_hit_points(max_hp),
-            min_attack(min_atk), max_attack(max_atk), defense_percentage(def_perc), attack_type(atk_type),
-            defense_type(def_type), skill_name(skill),
-            skill_description(skill_desc), cost(unit_cost),
-            attack_pattern(atk_pattern), multi_attack_damage(multi_atk_dmg) {}
-
-        // Getters
-        std::string GetName() const { return unit_name; }
-        int GetHitPoints() const { return hit_points; }
-        int GetMaxHitPoints() const { return max_hit_points; }
-        int GetMinAttack() const { return min_attack; }
-        int GetMaxAttack() const { return max_attack; }
-        float GetDefensePercentage() const { return defense_percentage; }
-        std::string GetAttackType() const { return attack_type; }
-        std::string GetDefenseType() const { return defense_type; }
-        std::string GetSkillName() const { return skill_name; }
-        std::string GetSkillDescription() const { return skill_description; }
-        int GetCost() const { return cost; }
-        std::string GetAttackPattern() const { return attack_pattern; }
-        int GetMultiAttackDamage() const { return multi_attack_damage; }
-        void TakeDamage(int damage);
-        void Heal(int amount);
-        bool IsAlive() const { return hit_points > 0; }
-
-        // РњРµС‚РѕРґС‹ РґР»СЏ СѓСЃРёР»РµРЅРёСЏ С…Р°СЂР°РєС‚РµСЂРёСЃС‚РёРє
-        void BoostMinAttack(float boost) { min_attack += static_cast<int>(boost); }
-        void BoostMaxAttack(float boost) { max_attack += static_cast<int>(boost); }
-        void BoostDefense(float boost) { defense_percentage += boost; if (defense_percentage > 1.0f) defense_percentage = 1.0f; }
-        void BoostMaxHP(int boost) { max_hit_points += boost; hit_points += boost; }
-    };
-
-    class Artifact {
-    private:
-        std::string artifact_name;
-        std::string description;
-        std::string effect_type;
-        float effect_value;
-        int cost;            // РЎС‚РѕРёРјРѕСЃС‚СЊ Р°СЂС‚РµС„Р°РєС‚Р°
-
-    public:
-        Artifact(std::string name, std::string desc, std::string effect, float value, int artifact_cost)
-            : artifact_name(name), description(desc), effect_type(effect), effect_value(value), cost(artifact_cost) {}
-
-        // Getters
-        std::string GetName() const { return artifact_name; }
-        std::string GetDescription() const { return description; }
-        std::string GetEffectType() const { return effect_type; }
-        float GetEffectValue() const { return effect_value; }
-        int GetCost() const { return cost; }
-    };
-
-    class Inventory {
-    private:
-        std::vector<Artifact> artifacts;
-        const int kInventorySize = 5;
-
-    public:
-        bool AddItem(const Artifact& artifact) {
-            if (artifacts.size() < kInventorySize) {
-                artifacts.push_back(artifact);
-                return true;
-            }
-            return false;
-        }
-
-        void RemoveItem(int index) {
-            if (index >= 0 && index < artifacts.size()) {
-                artifacts.erase(artifacts.begin() + index);
-            }
-        }
-
-        const std::vector<Artifact>& GetArtifacts() const { return artifacts; } // Getter for artifacts
-        int GetInventorySize() const { return kInventorySize; }
-    };
-
-    class Boss : public Unit {
-    private:
-        int heal_amount;
-        int block_amount;
-
-    public:
-        Boss(std::string name, int hp, int max_hp, int min_atk, int max_atk, float def_perc,
-            std::string atk_type, std::string def_type,
-            std::string skill, std::string skill_desc, int unit_cost,
-            int heal, int block, std::string atk_pattern, int multi_atk_dmg)
-            : Unit(name, hp, max_hp, min_atk, max_atk, def_perc, atk_type, def_type, skill, skill_desc, unit_cost, atk_pattern, multi_atk_dmg),
-            heal_amount(heal), block_amount(block) {}
-
-        int GetHealAmount() const { return heal_amount; }
-        int GetBlockAmount() const { return block_amount; }
-
-        int ChooseAction(); // РћР±СЉСЏРІРёРј Р·РґРµСЃСЊ, С‡С‚РѕР±С‹ РѕРїСЂРµРґРµР»РёС‚СЊ РїРѕР·Р¶Рµ
-    };
-
-    const std::string kRedColor = "\033[31m";
-    const std::string kResetColor = "\033[0m";
-
-    int GetRandomNumber(int min, int max); // РћР±СЉСЏРІР»РµРЅРёРµ
-
-    // --- Functions ---
-
-    void ClearScreen() {
-#ifdef _WIN32
-        system("cls");
-#else
-        system("clear");
-#endif
-    }
-
-    int GetRandomNumber(int min, int max) {
-        return min + rand() % (max - min + 1);
-    }
-
-    void PrintMessage(const std::string& message) {
-        std::cout << message << std::endl;
-    }
 
     std::vector<Unit> LoadUnitsFromFile(const std::string& filename) {
         std::vector<Unit> units;
@@ -169,7 +30,7 @@ namespace MyGame {
                 values.push_back(value);
             }
 
-            if (values.size() == 13) { // РћР±РЅРѕРІР»РµРЅРѕ РєРѕР»РёС‡РµСЃС‚РІРѕ Р·РЅР°С‡РµРЅРёР№
+            if (values.size() == 13) { // Обновлено количество значений
                 Unit unit(
                     values[0],                   // unit_name
                     std::stoi(values[1]),         // hit_points
@@ -291,11 +152,11 @@ namespace MyGame {
 
     std::vector<Unit> GenerateRandomEnemy(const std::vector<Unit>& available_units) {
         std::vector<Unit> enemy_team;
-        int num_enemies = GetRandomNumber(1, 3); // РЎР»СѓС‡Р°Р№РЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ РІСЂР°РіРѕРІ РІ РєРѕРјР°РЅРґРµ
+        int num_enemies = GetRandomNumber(1, 3); // Случайное количество врагов в команде
 
         for (int i = 0; i < num_enemies; ++i) {
             if (!available_units.empty()) {
-                // РЎР»СѓС‡Р°Р№РЅРѕ РІС‹Р±РёСЂР°РµРј СЋРЅРёС‚Р° РёР· СЃРїРёСЃРєР° РґРѕСЃС‚СѓРїРЅС‹С…
+                // Случайно выбираем юнита из списка доступных
                 int unit_index = GetRandomNumber(0, available_units.size() - 1);
                 Unit enemy = available_units[unit_index];
 
@@ -303,35 +164,10 @@ namespace MyGame {
             }
             else {
                 std::cerr << "No units available to generate enemy team!\n";
-                return {}; // Р’РѕР·РІСЂР°С‰Р°РµРј РїСѓСЃС‚СѓСЋ РєРѕРјР°РЅРґСѓ
+                return {}; // Возвращаем пустую команду
             }
         }
         return enemy_team;
-    }
-
-    void DrawHealthBar(int current_hp, int max_hp, int bar_length = 10) {
-        using namespace MyGame;
-        float health_ratio = (float)current_hp / max_hp;
-        int filled_bars = (int)(health_ratio * bar_length);
-        int empty_bars = bar_length - filled_bars;
-
-        std::cout << "[";
-        for (int i = 0; i < filled_bars; ++i) {
-            std::cout << kRedColor << "#" << kResetColor; // РљСЂР°СЃРёРј Р·Р°РїРѕР»РЅРµРЅРЅС‹Рµ СЏС‡РµР№РєРё
-        }
-        for (int i = 0; i < empty_bars; ++i) {
-            std::cout << " ";
-        }
-        std::cout << "] (" << kRedColor << current_hp << "/" << max_hp << kResetColor << ")"; // РљСЂР°СЃРёРј Р·РЅР°С‡РµРЅРёСЏ HP
-    }
-
-    void DisplayTeam(const std::vector<Unit>& team, bool is_player = true) {
-        PrintMessage((is_player ? "Your Team:\n" : "Enemy Team:\n"));
-        for (size_t i = 0; i < team.size(); ++i) {
-            std::cout << std::setw(2) << i + 1 << ". " << std::setw(10) << team[i].GetName() << " ";
-            DrawHealthBar(team[i].GetHitPoints(), team[i].GetMaxHitPoints());
-            std::cout << "\n";
-        }
     }
 
     void ApplyArtifactEffects(std::vector<Unit>& team, const Inventory& inventory) {
@@ -364,17 +200,6 @@ namespace MyGame {
 
     int GetRandomAttackDamage(int min_attack, int max_attack) {
         return GetRandomNumber(min_attack, max_attack);
-    }
-
-    void Unit::TakeDamage(int damage) {
-        // РЈС‡РёС‚С‹РІР°РµРј РїСЂРѕС†РµРЅС‚РЅСѓСЋ Р·Р°С‰РёС‚Сѓ
-        float damage_reduction = defense_percentage;
-        float actual_damage = damage * (1.0f - damage_reduction);
-
-        hit_points -= static_cast<int>(actual_damage);
-        if (hit_points < 0) {
-            hit_points = 0;
-        }
     }
 
     void Battle(std::vector<Unit>& player_team, Boss& boss, int floor) {
@@ -430,7 +255,7 @@ namespace MyGame {
                             std::cin >> target_choice;
                         }
                         int target_index = target_choice - 1;
-                        int heal_amount = GetRandomNumber(20, 40); // РџСЂРёРјРµСЂ: Р›РµС‡РµРЅРёРµ РЅР° 20-40 HP
+                        int heal_amount = GetRandomNumber(20, 40); // Пример: Лечение на 20-40 HP
                         player_team[target_index].Heal(heal_amount);
                         PrintMessage(player_team[unit_index].GetName() + " heals " + player_team[target_index].GetName() + " for " + std::to_string(heal_amount) + " HP.");
 
@@ -448,7 +273,7 @@ namespace MyGame {
 
                 }
                 else {
-                    // Р•СЃР»Рё СЋРЅРёС‚ РЅРµ Р»РµРєР°СЂСЊ - Р°С‚Р°РєР°
+                    // Если юнит не лекарь - атака
                     int damage = GetRandomAttackDamage(player_team[unit_index].GetMinAttack(), player_team[unit_index].GetMaxAttack());
 
                     PrintMessage(player_team[unit_index].GetName() + " attacks " + boss.GetName() + " and deals " + std::to_string(damage) + " damage.");
@@ -468,7 +293,8 @@ namespace MyGame {
                 DisplayTeam(player_team, true);
                 std::cout << "\n";
                 std::cout << "Boss: " << boss.GetName() << " ";
-                DrawHealthBar(boss.GetHitPoints(), boss.GetMaxHitPoints());
+                // Controller.cpp
+                DrawHealthBar(boss.GetHitPoints(), boss.GetMaxHitPoints(), 10); // Добавлен третий аргумент
                 std::cout << "\n\n";
                 PrintMessage("--- Boss Turn --- ");
 
@@ -482,14 +308,14 @@ namespace MyGame {
                         if (!player_team[i].IsAlive()) {
                             PrintMessage(player_team[i].GetName() + " dies!");
                             player_team.erase(player_team.begin() + i);
-                            i--; // РЈРјРµРЅСЊС€Р°РµРј РёРЅРґРµРєСЃ, С‚.Рє. СѓРґР°Р»РёР»Рё СЌР»РµРјРµРЅС‚
+                            i--; // Уменьшаем индекс, т.к. удалили элемент
                         }
                     }
                 }
                 else {
                     if (boss_action == 1) { // Single Target Attack
                         int player_target_index = GetRandomNumber(0, player_team.size() - 1);
-                        // РџРѕР»СѓС‡Р°РµРј СЃР»СѓС‡Р°Р№РЅС‹Р№ СѓСЂРѕРЅ
+                        // Получаем случайный урон
                         int damage = GetRandomAttackDamage(boss.GetMinAttack(), boss.GetMaxAttack());
                         PrintMessage(boss.GetName() + " attacks " + player_team[player_target_index].GetName() + " and deals " + std::to_string(damage) + " damage.");
                         player_team[player_target_index].TakeDamage(damage);
@@ -501,7 +327,7 @@ namespace MyGame {
                     else if (boss_action == 2) { // AoE Attack
                         PrintMessage(boss.GetName() + " unleashes a devastating AoE attack!");
                         for (size_t i = 0; i < player_team.size(); ++i) {
-                            // РџРѕР»СѓС‡Р°РµРј СЃР»СѓС‡Р°Р№РЅС‹Р№ СѓСЂРѕРЅ
+                            // Получаем случайный урон
                             int damage = GetRandomAttackDamage(boss.GetMinAttack(), boss.GetMaxAttack()) / 2;
                             player_team[i].TakeDamage(damage);
                             PrintMessage(player_team[i].GetName() + " takes " + std::to_string(damage) + " damage.");
@@ -509,7 +335,7 @@ namespace MyGame {
                             if (!player_team[i].IsAlive()) {
                                 PrintMessage(player_team[i].GetName() + " dies!");
                                 player_team.erase(player_team.begin() + i);
-                                i--; // РЈРјРµРЅСЊС€Р°РµРј РёРЅРґРµРєСЃ, С‚.Рє. СѓРґР°Р»РёР»Рё СЌР»РµРјРµРЅС‚
+                                i--; // Уменьшаем индекс, т.к. удалили элемент
                             }
                         }
                     }
@@ -521,7 +347,7 @@ namespace MyGame {
                     }
                     else if (boss_action == 4) { // Block
                         PrintMessage(boss.GetName() + " braces for impact, blocking incoming damage!");
-                        // Р’ СЌС‚РѕРј РїСЂРёРјРµСЂРµ, РїСЂРѕСЃС‚Рѕ РІС‹РІРѕРґРёРј СЃРѕРѕР±С‰РµРЅРёРµ. РЎРЅРёР¶РµРЅРёРµ СѓСЂРѕРЅР° СЂРµР°Р»РёР·СѓРµС‚СЃСЏ РІ РЅР°С‡Р°Р»Рµ СЃР»РµРґСѓСЋС‰РµРіРѕ С…РѕРґР° РёРіСЂРѕРєР°.
+                        // В этом примере, просто выводим сообщение. Снижение урона реализуется в начале следующего хода игрока.
                     }
                 }
 
@@ -591,7 +417,7 @@ namespace MyGame {
                             std::cin >> target_choice;
                         }
                         int target_index = target_choice - 1;
-                        int heal_amount = GetRandomNumber(20, 40); // РџСЂРёРјРµСЂ: Р›РµС‡РµРЅРёРµ РЅР° 20-40 HP
+                        int heal_amount = GetRandomNumber(20, 40); // Пример: Лечение на 20-40 HP
                         player_team[target_index].Heal(heal_amount);
                         PrintMessage(player_team[unit_index].GetName() + " heals " + player_team[target_index].GetName() + " for " + std::to_string(heal_amount) + " HP.");
 
@@ -609,13 +435,13 @@ namespace MyGame {
                         if (!enemy_team[i].IsAlive()) {
                             PrintMessage(enemy_team[i].GetName() + " dies!");
                             enemy_team.erase(enemy_team.begin() + i);
-                            i--; // РЈРјРµРЅСЊС€Р°РµРј РёРЅРґРµРєСЃ, С‚.Рє. СѓРґР°Р»РёР»Рё СЌР»РµРјРµРЅС‚
+                            i--; // Уменьшаем индекс, т.к. удалили элемент
                         }
                     }
 
                 }
                 else {
-                    // Р•СЃР»Рё СЋРЅРёС‚ РЅРµ Р»РµРєР°СЂСЊ - Р°С‚Р°РєР°
+                    // Если юнит не лекарь - атака
                     std::cout << "Choose a target to attack (1-" << enemy_team.size() << "): ";
                     int target_choice;
                     std::cin >> target_choice;
@@ -627,10 +453,10 @@ namespace MyGame {
                         std::cin >> target_choice;
                     }
 
-                    // РћР±СЉСЏРІР»СЏРµРј player_damage_dealt Р·РґРµСЃСЊ, РІРЅСѓС‚СЂРё Р±Р»РѕРєР° if (player_choice > 0)
+                    // Объявляем player_damage_dealt здесь, внутри блока if (player_choice > 0)
                     int player_damage_dealt = 0;
                     int target_index = target_choice - 1;
-                    // РџРѕР»СѓС‡Р°РµРј СЃР»СѓС‡Р°Р№РЅС‹Р№ СѓСЂРѕРЅ
+                    // Получаем случайный урон
                     int damage = GetRandomAttackDamage(player_team[unit_index].GetMinAttack(), player_team[unit_index].GetMaxAttack());
                     player_damage_dealt = damage;
                     PrintMessage(player_team[unit_index].GetName() + " attacks " + enemy_team[target_index].GetName() + " and deals " + std::to_string(damage) + " damage.");
@@ -641,7 +467,7 @@ namespace MyGame {
                         enemy_team.erase(enemy_team.begin() + target_index);
                     }
 
-                    //Р’С‹РІРѕРґРёРј РёРЅС„РѕСЂРјР°С†РёСЋ РѕР± СѓСЂРѕРЅРµ Р·РґРµСЃСЊ, РїРѕСЃР»Рµ РїСЂРѕРІРµСЂРєРё РЅР° РІР°Р»РёРґРЅРѕСЃС‚СЊ
+                    //Выводим информацию об уроне здесь, после проверки на валидность
                     PrintMessage("Your unit dealt " + std::to_string(player_damage_dealt) + " damage.");
                 }
 
@@ -656,12 +482,12 @@ namespace MyGame {
                 std::cout << "\n";
                 PrintMessage("--- Enemy Turn --- ");
 
-                // РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј РїРµСЂРµРјРµРЅРЅС‹Рµ Р·РґРµСЃСЊ, С‡С‚РѕР±С‹ РѕРЅРё РІСЃРµРіРґР° Р±С‹Р»Рё РѕР±СЉСЏРІР»РµРЅС‹
+                // Инициализируем переменные здесь, чтобы они всегда были объявлены
                 int enemy_damage_dealt = 0;
 
                 int enemy_unit_index = GetRandomNumber(0, enemy_team.size() - 1);
                 if (enemy_team[enemy_unit_index].GetAttackPattern() == "Heal") {
-                    // Р›РµС‡РёС‚ СЃР°РјРѕРіРѕ РїРѕРІСЂРµР¶РґРµРЅРЅРѕРіРѕ СЃРѕСЋР·РЅРёРєР°
+                    // Лечит самого поврежденного союзника
                     int target_index = 0;
                     for (size_t i = 1; i < enemy_team.size(); ++i) {
                         if (enemy_team[i].GetHitPoints() < enemy_team[target_index].GetHitPoints()) {
@@ -681,13 +507,13 @@ namespace MyGame {
                         if (!player_team[i].IsAlive()) {
                             PrintMessage(player_team[i].GetName() + " dies!");
                             player_team.erase(player_team.begin() + i);
-                            i--; // РЈРјРµРЅСЊС€Р°РµРј РёРЅРґРµРєСЃ, С‚.Рє. СѓРґР°Р»РёР»Рё СЌР»РµРјРµРЅС‚
+                            i--; // Уменьшаем индекс, т.к. удалили элемент
                         }
                     }
                 }
 
                 else {
-                    // РЎР»СѓС‡Р°Р№РЅС‹Р№ РІС‹Р±РѕСЂ СЋРЅРёС‚Р° РґР»СЏ Р°С‚Р°РєРё
+                    // Случайный выбор юнита для атаки
                     int player_target_index = GetRandomNumber(0, player_team.size() - 1);
                     int damage = GetRandomAttackDamage(enemy_team[enemy_unit_index].GetMinAttack(), enemy_team[enemy_unit_index].GetMaxAttack());
                     enemy_damage_dealt = damage;
@@ -720,17 +546,17 @@ namespace MyGame {
     }
 
     void Shop(std::vector<Unit>& player_team, Inventory& player_inventory, int& gold, const std::vector<Unit>& available_units, const std::vector<Artifact>& available_artifacts) {
-        // РЎР»СѓС‡Р°Р№РЅС‹Р№ РІС‹Р±РѕСЂ СЋРЅРёС‚Р° Рё Р°СЂС‚РµС„Р°РєС‚Р° (РІС‹РЅРѕСЃРёРј Р·Р° РїСЂРµРґРµР»С‹ С†РёРєР»Р°)
+        // Случайный выбор юнита и артефакта (выносим за пределы цикла)
         Unit random_unit = available_units[GetRandomNumber(0, available_units.size() - 1)];
         Artifact random_artifact = GetRandomArtifact(available_artifacts);
 
-        while (true) { // Р”РѕР±Р°РІР»СЏРµРј С†РёРєР», С‡С‚РѕР±С‹ РѕСЃС‚Р°РІР°С‚СЊСЃСЏ РІ РјР°РіР°Р·РёРЅРµ
-            ClearScreen(); // РћС‡РёС‰Р°РµРј СЌРєСЂР°РЅ РїРµСЂРµРґ РєР°Р¶РґС‹Рј РѕС‚РѕР±СЂР°Р¶РµРЅРёРµРј РјРµРЅСЋ
+        while (true) { // Добавляем цикл, чтобы оставаться в магазине
+            ClearScreen(); // Очищаем экран перед каждым отображением меню
             PrintMessage("\n--- Welcome to the Shop! --- ");
             PrintMessage("You have " + std::to_string(gold) + " gold.");
             PrintMessage("What would you like to buy?");
 
-            // Р¦РµРЅС‹
+            // Цены
             int artifact_price = random_artifact.GetCost();
             int unit_price = random_unit.GetCost();
 
@@ -739,7 +565,7 @@ namespace MyGame {
             std::cout << "2. Hire " << random_unit.GetName() << " (" << unit_price << " gold)\n";
             std::cout << "3. Exit\n";
 
-            int input_choice; //РћР±СЉСЏРІР»СЏРµРј РїРµСЂРµРјРµРЅРЅСѓСЋ Р·РґРµСЃСЊ
+            int input_choice; //Объявляем переменную здесь
             std::cout << "Enter your choice: ";
             std::cin >> input_choice;
 
@@ -778,7 +604,7 @@ namespace MyGame {
                 }
             }
             else if (input_choice == 3) { // Exit
-                break; // Р’С‹С…РѕРґ РёР· С†РёРєР»Р° РјР°РіР°Р·РёРЅР°
+                break; // Выход из цикла магазина
             }
             else {
                 PrintMessage("Invalid choice!");
@@ -788,18 +614,6 @@ namespace MyGame {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cin.get();
         }
-    }
-
-    void DisplayUnitDetails(const Unit& unit) {
-        PrintMessage("--- Unit Details --- ");
-        PrintMessage("Name: " + unit.GetName());
-        std::cout << "HP: " << unit.GetHitPoints() << "/" << unit.GetMaxHitPoints() << "\n";
-        PrintMessage("Min Attack: " + std::to_string(unit.GetMinAttack()));
-        PrintMessage("Max Attack: " + std::to_string(unit.GetMaxAttack()));
-        PrintMessage("Defense Percentage: " + std::to_string(unit.GetDefensePercentage()));
-        PrintMessage("Attack Type: " + unit.GetAttackType());
-        PrintMessage("Defense Type: " + unit.GetDefenseType());
-        PrintMessage("Skill: " + unit.GetSkillName() + " - " + unit.GetSkillDescription());
     }
 
     void HandleTeamManagement(std::vector<Unit>& player_team) {
@@ -814,7 +628,7 @@ namespace MyGame {
             PrintMessage("3. Back to Profile");
             std::cout << "Enter your choice: ";
 
-            int input_choice; //РѕР±СЉСЏРІР»СЏРµРј Р·РґРµСЃСЊ
+            int input_choice; //объявляем здесь
             std::cin >> input_choice;
 
             while (std::cin.fail()) {
@@ -825,7 +639,7 @@ namespace MyGame {
             }
 
             if (input_choice == 1) {
-                // РџСЂРѕСЃРјРѕС‚СЂ РёРЅС„РѕСЂРјР°С†РёРё Рѕ СЋРЅРёС‚Рµ
+                // Просмотр информации о юните
                 if (player_team.empty()) {
                     PrintMessage("Your team is empty!");
                 }
@@ -841,7 +655,7 @@ namespace MyGame {
                         std::cin >> unit_index;
                     }
 
-                    DisplayUnitDetails(player_team[unit_index - 1]); // РџРѕРєР°Р·С‹РІР°РµРј РґРµС‚Р°Р»Рё РІС‹Р±СЂР°РЅРЅРѕРіРѕ СЋРЅРёС‚Р°
+                    DisplayUnitDetails(player_team[unit_index - 1]); // Показываем детали выбранного юнита
                 }
 
                 PrintMessage("Press Enter to continue...");
@@ -850,7 +664,7 @@ namespace MyGame {
 
             }
             else if (input_choice == 2) {
-                // РЈРІРѕР»СЊРЅРµРЅРёРµ СЋРЅРёС‚Р°
+                // Увольнение юнита
                 if (player_team.empty()) {
                     PrintMessage("Your team is empty!");
                 }
@@ -885,7 +699,7 @@ namespace MyGame {
 
             }
             else if (input_choice == 3) {
-                break; // Р’РѕР·РІСЂР°С‚ РІ РїСЂРѕС„РёР»СЊ
+                break; // Возврат в профиль
             }
             else {
                 PrintMessage("Invalid choice. Please try again.");
@@ -896,7 +710,7 @@ namespace MyGame {
         }
     }
 
-    void DisplayPlayerProfile(std::vector<MyGame::Unit>& player_team, MyGame::Inventory& player_inventory, int gold) {
+    void DisplayPlayerProfile(std::vector<Unit>& player_team, Inventory& player_inventory, int gold) {
         while (true) {
             MyGame::ClearScreen();
             PrintMessage("--- Player Profile ---");
@@ -925,7 +739,7 @@ namespace MyGame {
             PrintMessage("2. Back to Main Menu");
             std::cout << "Enter your choice: ";
 
-            int input_choice; //РћР±СЉСЏРІР»СЏРµРј РїРµСЂРµРјРµРЅРЅСѓСЋ Р·РґРµСЃСЊ
+            int input_choice; //Объявляем переменную здесь
 
             std::cin >> input_choice;
 
@@ -940,7 +754,7 @@ namespace MyGame {
                 HandleTeamManagement(player_team);
             }
             else if (input_choice == 2) {
-                break; // Р’РѕР·РІСЂР°С‚ РІ РіР»Р°РІРЅРѕРµ РјРµРЅСЋ
+                break; // Возврат в главное меню
             }
             else {
                 PrintMessage("Invalid choice. Please try again.");
@@ -951,7 +765,7 @@ namespace MyGame {
         }
     }
 
-    void HandleMainMenu(std::vector<MyGame::Unit>& player_team, MyGame::Inventory& player_inventory, int& gold, int& floor, const std::vector<MyGame::Unit>& available_units, const std::vector<Artifact>& available_artifacts) {
+    void HandleMainMenu(std::vector<Unit>& player_team, Inventory& player_inventory, int& gold, int& floor, const std::vector<Unit>& available_units, const std::vector<Artifact>& available_artifacts) {
         while (true) {
             MyGame::ClearScreen();
 
@@ -961,7 +775,7 @@ namespace MyGame {
             PrintMessage("2. View Profile");
             std::cout << "Enter your choice: ";
 
-            int input_choice; //РћР±СЉСЏРІР»СЏРµРј РїРµСЂРµРјРµРЅРЅСѓСЋ Р·РґРµСЃСЊ
+            int input_choice; //Объявляем переменную здесь
 
             std::cin >> input_choice;
 
@@ -973,8 +787,8 @@ namespace MyGame {
             }
 
             if (input_choice == 1) {
-                floor++; // РџРµСЂРµС…РѕРґ РЅР° СЃР»РµРґСѓСЋС‰РёР№ СЌС‚Р°Р¶
-                break;   // Р’С‹С…РѕРґ РёР· С†РёРєР»Р° РјРµРЅСЋ
+                floor++; // Переход на следующий этаж
+                break;   // Выход из цикла меню
             }
             else if (input_choice == 2) {
                 DisplayPlayerProfile(player_team, player_inventory, gold);
@@ -987,110 +801,4 @@ namespace MyGame {
             }
         }
     }
-
-    int Boss::ChooseAction() {
-        int choice = MyGame::GetRandomNumber(1, 4); // 1 - РђС‚Р°РєР°, 2 - РђС‚Р°РєР° РїРѕ РІСЃРµРј, 3 - Р›РµС‡РµРЅРёРµ, 4 - Р‘Р»РѕРє
-        return choice;
-    }
-    void Unit::Heal(int amount) {
-        hit_points += amount;
-        if (hit_points > max_hit_points) {
-            hit_points = max_hit_points;
-        }
-    }
 } // namespace MyGame
-
-int main() {
-    using namespace MyGame;
-    srand(time(0));
-
-    // Load units from file
-    std::vector<MyGame::Unit> available_units = MyGame::LoadUnitsFromFile("units.txt");
-    if (available_units.empty()) {
-        std::cerr << "Failed to load units. Exiting.\n";
-        return 1;
-    }
-
-    // Load artifacts from file
-    std::vector<MyGame::Artifact> available_artifacts = MyGame::LoadArtifactsFromFile("artifacts.txt");
-    if (available_artifacts.empty()) {
-        std::cerr << "Failed to load artifacts. Exiting.\n";
-        return 1;
-    }
-    // Load boss from file
-    MyGame::Boss final_boss = MyGame::LoadBossFromFile("boss.txt");
-
-
-    std::vector<MyGame::Unit> player_team;
-    if (available_units.size() >= 2) {
-        player_team.push_back(available_units[0]); // Warrior
-        player_team.push_back(available_units[1]); // Mage
-    }
-    else { PrintMessage("Not enough units loaded\n"); }
-
-
-    MyGame::Inventory player_inventory; // РРЅРІРµРЅС‚Р°СЂСЊ РёРіСЂРѕРєР°
-    MyGame::ApplyArtifactEffects(player_team, player_inventory);
-
-    int floor = 1;
-    int gold = 100; // РќР°С‡Р°Р»СЊРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ Р·РѕР»РѕС‚Р°
-
-    while (true) {
-        // Р’С‹Р·С‹РІР°РµРј РѕСЃРЅРѕРІРЅРѕРµ РјРµРЅСЋ, С‡С‚РѕР±С‹ РїРѕР»СѓС‡РёС‚СЊ РІС‹Р±РѕСЂ РёРіСЂРѕРєР°
-        MyGame::HandleMainMenu(player_team, player_inventory, gold, floor, available_units, available_artifacts);
-
-        // Р”Р°Р»СЊС€Рµ РїСЂРѕРёСЃС…РѕРґРёС‚ СЃР»СѓС‡Р°Р№РЅРѕРµ СЃРѕР±С‹С‚РёРµ РїСЂРё РїРµСЂРµС…РѕРґРµ РЅР° РЅРѕРІС‹Р№ СЌС‚Р°Р¶
-        MyGame::ClearScreen();
-        MyGame::PrintMessage("\n--- Floor " + std::to_string(floor) + " ---");
-
-        if (floor > 10) {
-            MyGame::PrintMessage("You reached the top of the tower! Prepare for the final battle!");
-            MyGame::Battle(player_team, final_boss, floor); // Р—Р°РїСѓСЃРєР°РµРј Р±РёС‚РІСѓ СЃ Р±РѕСЃСЃРѕРј
-            break;
-        }
-        else {
-            int event = MyGame::GetRandomNumber(1, 4);
-
-            if (event == 1) { // Р‘РѕР№
-                MyGame::PrintMessage("You have been attacked!");
-                MyGame::ApplyArtifactEffects(player_team, player_inventory);
-                std::vector<MyGame::Unit> enemy_team = MyGame::GenerateRandomEnemy(available_units);
-                MyGame::Battle(player_team, enemy_team, floor);
-                if (player_team.empty()) break;
-
-                gold += 20; // РќР°РіСЂР°РґР° Р·Р° РїРѕР±РµРґСѓ РІ Р±РѕСЋ
-                MyGame::PrintMessage("You earned 20 gold!");
-
-            }
-            else if (event == 2) { // РЎРѕРєСЂРѕРІРёС‰РЅРёС†Р°
-                MyGame::PrintMessage("You found treasure!");
-                if (MyGame::GetRandomNumber(1, 2) == 1) {
-                    MyGame::Artifact new_artifact = MyGame::GetRandomArtifact(available_artifacts);
-                    if (player_inventory.AddItem(new_artifact)) {
-                        MyGame::PrintMessage("You found: " + new_artifact.GetName() + "!");
-                    }
-                    else {
-                        MyGame::PrintMessage("Your inventory is full!");
-                    }
-                }
-                gold += 10;
-                MyGame::PrintMessage("You found 10 gold!");
-
-            }
-            else if (event == 3) { // РњР°РіР°Р·РёРЅ
-                MyGame::PrintMessage("You found a shop!");
-                MyGame::Shop(player_team, player_inventory, gold, available_units, available_artifacts);
-            }
-            else { // РџСѓСЃС‚Р°СЏ РєРѕРјРЅР°С‚Р°
-                MyGame::PrintMessage("You found an empty room.");
-            }
-        }
-
-        MyGame::PrintMessage("Press Enter to continue...");
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cin.get();
-    }
-
-    MyGame::PrintMessage("Game Over!");
-    return 0;
-}
