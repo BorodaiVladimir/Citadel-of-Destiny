@@ -1,52 +1,53 @@
 #include "View.h"
-#include <cstdlib>
-#include <iomanip>
+
+#include <cstdlib>  
+#include <iomanip>  // для std::setw()
+#include <iostream>  
+#include <vector>   
 
 namespace MyGame {
 
-    const std::string kRedColor = "\033[31m";
-    const std::string kResetColor = "\033[0m";
+    using std::cout;
+    using std::endl;
+    using std::setw;
+    using std::string;
+    using std::vector;
 
-    void ClearScreen() {
-#ifdef _WIN32
-        system("cls");
-#else
-        system("clear");
-#endif
-    }
+    const string kRedColor = "\033[31m";
+    const string kResetColor = "\033[0m";
 
-    void PrintMessage(const std::string& message) {
-        std::cout << message << std::endl;
-    }
+    
+
+    void PrintMessage(const string& message) { cout << message << endl; }
 
     void DrawHealthBar(int current_hp, int max_hp, int bar_length) {
-        float health_ratio = (float)current_hp / max_hp;
-        int filled_bars = (int)(health_ratio * bar_length);
+        float health_ratio = static_cast<float>(current_hp) / max_hp;
+        int filled_bars = static_cast<int>(health_ratio * bar_length);
         int empty_bars = bar_length - filled_bars;
 
-        std::cout << "[";
+        cout << "[";
         for (int i = 0; i < filled_bars; ++i) {
-            std::cout << kRedColor << "#" << kResetColor; // Красим заполненные ячейки
+            cout << kRedColor << "#" << kResetColor;
         }
         for (int i = 0; i < empty_bars; ++i) {
-            std::cout << " ";
+            cout << " ";
         }
-        std::cout << "] (" << kRedColor << current_hp << "/" << max_hp << kResetColor << ")"; // Красим значения HP
+        cout << "] (" << kRedColor << current_hp << "/" << max_hp << kResetColor << ")";
     }
 
-    void DisplayTeam(const std::vector<Unit>& team, bool is_player) {
-        PrintMessage((is_player ? "Your Team:\n" : "Enemy Team:\n"));
+    void DisplayTeam(const vector<Unit>& team, bool is_player) {
+        PrintMessage(is_player ? "Your Team:\n" : "Enemy Team:\n");
         for (size_t i = 0; i < team.size(); ++i) {
-            std::cout << std::setw(2) << i + 1 << ". " << std::setw(10) << team[i].GetName() << " ";
+            cout << setw(2) << i + 1 << ". " << setw(10) << team[i].GetName() << " ";
             DrawHealthBar(team[i].GetHitPoints(), team[i].GetMaxHitPoints());
-            std::cout << "\n";
+            cout << endl;
         }
     }
 
     void DisplayUnitDetails(const Unit& unit) {
         PrintMessage("--- Unit Details --- ");
         PrintMessage("Name: " + unit.GetName());
-        std::cout << "HP: " << unit.GetHitPoints() << "/" << unit.GetMaxHitPoints() << "\n";
+        cout << "HP: " << unit.GetHitPoints() << "/" << unit.GetMaxHitPoints() << endl;
         PrintMessage("Min Attack: " + std::to_string(unit.GetMinAttack()));
         PrintMessage("Max Attack: " + std::to_string(unit.GetMaxAttack()));
         PrintMessage("Defense Percentage: " + std::to_string(unit.GetDefensePercentage()));
@@ -55,4 +56,4 @@ namespace MyGame {
         PrintMessage("Skill: " + unit.GetSkillName() + " - " + unit.GetSkillDescription());
     }
 
-} // namespace MyGame
+}  

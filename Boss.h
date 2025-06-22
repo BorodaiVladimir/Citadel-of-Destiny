@@ -1,27 +1,35 @@
-#ifndef BOSS_H
-#define BOSS_H
+// Boss.h
+#ifndef MYGAME_BOSS_H_
+#define MYGAME_BOSS_H_
 
-#include "Unit.h"
+#include "Unit.h"  // Необходимо для Unit
 
 namespace MyGame {
 
     class Boss : public Unit {
-    private:
-        int heal_amount;
-        int block_amount;
-
     public:
-        Boss(std::string name, int hp, int max_hp, int min_atk, int max_atk, float def_perc,
-            std::string atk_type, std::string def_type,
-            std::string skill, std::string skill_desc, int unit_cost,
-            int heal, int block, std::string atk_pattern, int multi_atk_dmg);
+        // Existing constructor
+        Boss(const std::string& name, int hp, int max_hp, int min_atk, int max_atk,
+            float def_perc, const std::string& atk_type, const std::string& def_type,
+            const std::string& skill, const std::string& skill_desc, int unit_cost,
+            int heal, int block, const std::string& atk_pattern,
+            int multi_atk_dmg);
+
+        // Default constructor (added)
+        Boss() : Unit("Default Boss", 100, 100, 10, 15, 0.1f, "Physical", "Armor",
+            "Strike", "Default attack", 100, "Single", 0),
+            heal_amount_(10),
+            block_amount_(5) {} // Initialization list
 
         int GetHealAmount() const;
         int GetBlockAmount() const;
+        int ChooseAction();
 
-        int ChooseAction(); // Объявим здесь, чтобы определить позже
+    private:
+        int heal_amount_;
+        int block_amount_;
     };
 
-} // namespace MyGame
+}  // namespace MyGame
 
-#endif
+#endif  // MYGAME_BOSS_H_

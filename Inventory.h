@@ -1,23 +1,23 @@
-#ifndef INVENTORY_H
-#define INVENTORY_H
+#ifndef MYGAME_INVENTORY_H_
+#define MYGAME_INVENTORY_H_
 
 #include <vector>
-#include "Artifact.h"
+#include "Artifact.h"  // Необходимо для Artifact
 
 namespace MyGame {
 
-    class Inventory {
-    private:
-        std::vector<Artifact> artifacts;
-        const int kInventorySize = 5;
+	class Inventory {
+	public:
+		bool AddItem(const Artifact& artifact);
+		void RemoveItem(int index);
+		const std::vector<Artifact>& GetArtifacts() const;
+		int GetInventorySize() const;
 
-    public:
-        bool AddItem(const Artifact& artifact);
-        void RemoveItem(int index);
-        const std::vector<Artifact>& GetArtifacts() const; // Getter for artifacts
-        int GetInventorySize() const;
-    };
+	private:
+		std::vector<Artifact> artifacts_;
+		const int kInventorySize_ = 5;  // Член класса константа
+	};
 
-} // namespace MyGame
+}  // namespace MyGame
 
-#endif
+#endif  // MYGAME_INVENTORY_H_

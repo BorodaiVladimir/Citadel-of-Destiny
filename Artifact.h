@@ -1,29 +1,29 @@
-#ifndef ARTIFACT_H
-#define ARTIFACT_H
+#ifndef MYGAME_ARTIFACT_H_
+#define MYGAME_ARTIFACT_H_
 
 #include <string>
 
 namespace MyGame {
 
     class Artifact {
-    private:
-        std::string artifact_name;
-        std::string description;
-        std::string effect_type;
-        float effect_value;
-        int cost;            // Стоимость артефакта
-
     public:
-        Artifact(std::string name, std::string desc, std::string effect, float value, int artifact_cost);
+        Artifact(const std::string& name, const std::string& desc,
+            const std::string& effect, float value, int artifact_cost);
 
-        // Getters
         std::string GetName() const;
         std::string GetDescription() const;
         std::string GetEffectType() const;
         float GetEffectValue() const;
         int GetCost() const;
+
+    private:
+        std::string artifact_name_;
+        std::string description_;
+        std::string effect_type_;
+        float effect_value_;
+        int cost_;
     };
 
-} // namespace MyGame
+}  
 
-#endif
+#endif  
