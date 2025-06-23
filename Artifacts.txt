@@ -1,8 +1,0 @@
-Sword of Fire,Deals extra fire damage,ATTACK_BOOST,10,150
-Shield of Light,Reduces incoming damage,DEFENSE_BOOST,0.1,75
-Potion of Healing,Restores health points,HP_BOOST,50,50
-Amulet of Magic,Increases magic attack,ATTACK_BOOST,15,200
-Boots of Speed,Increases attack speed,DEFENSE_BOOST,0.05,100
-Ring of Regeneration,Heals a small amount each turn,HP_BOOST,25,120
-Helm of Fortitude,Provides extra defense,DEFENSE_BOOST,0.15,180
-Gloves of Power,Increases strength,ATTACK_BOOST,8,90

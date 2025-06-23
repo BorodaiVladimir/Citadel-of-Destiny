@@ -1,6 +1,0 @@
-Warrior,100,100,10,20,0.2,Physical,Armor,Strike,Basic attack,75,Single,0
-Mage,70,70,15,25,0.1,Magical,Cloth,Fireball,Deals fire damage,100,Single,0
-Goblin,50,50,5,10,0.05,Physical,Leather,Stab,Quick stab,25,Single,0
-Healer,80,80,0,0,0.05,Holy,Cloth,Heal,Heals a target,100,Heal,0
-Bomber,60,60,20,30,0.1,Physical,Leather,Explode,Deals damage to all enemies,120,Multi,10
-Warlock,80,80,25,35,0.15,Magical,Cloth,Curse,Deals damage to all enemies,150,Multi,15
